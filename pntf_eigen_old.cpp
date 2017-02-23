@@ -312,8 +312,7 @@ Eigen::Tensor<double,3> readCSV(std::string file, int rows, int cols, int deps) 
           token.replace(pos, 1, "");
         }
         if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えなかった
-          if(col >= 193) res(row, col-193, dep) = stof(elems[i]); //最近10年分くらいのみ
-          //res(row, col, dep) = stof(elems[i]); //atofではダメだった
+          res(row, col, dep) = stof(elems[i]); //atofではダメだった
           if(dep == deps-1){
             col++;
             dep = 0;
@@ -398,12 +397,12 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
       double denom = 0;
       for(int j = 0; j < X.cols(); j++){
         if(Y(i,j) != 0.0){
-          numer += M(i,j)*X(i,j) / (Y(i,j)+pow(10,-10)) * V(k,j);
+          numer += M(i,j)*X(i,j) / Y(i,j) * V(k,j);
           denom += M(i,j)*V(k,j);
         }
       }
       if (denom != 0.0) {
-        T(i,k) = T(i,k) * numer / (denom + pow(10,-10));
+        T(i,k) = T(i,k) * numer / denom;
       }else{
         T(i,k) = 0.0;
       }
@@ -416,7 +415,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
       double denom = 0;
       for(int i = 0; i < X.rows(); i++){
         if(Y(i,j) != 0.0){
-          numer += M(i,j)*X(i,j) / (Y(i,j)+pow(10,-10)) * T(i,k);
+          numer += M(i,j)*X(i,j) / (Y(i,j) * T(i,k)+pow(10,-10));
           denom += M(i,j)*T(i,k);
         }
       }
@@ -478,10 +477,13 @@ int main(int argc, char* argv[]){
   M2 -= M1;
   //cout << M1 << endl;
   int r = atoi(argv[5]);
-  ofstream ofs2_1("dataX1.csv");
-  MatrixXd A1 = mode_unfold(X1, 1);
-  ofs2_1 << X1 << endl;
-  /*
+
+
+
+
+
+
+
   //the initiation of U,T,V : X1 = UxTxV
   MatrixXd U = MatrixXd(X1.dimension(0),r);
   MatrixXd T = MatrixXd(X1.dimension(1),r);
@@ -504,7 +506,7 @@ int main(int argc, char* argv[]){
       T(i,j) = rand01(mt);
     }
   }
-  for (int i = 0; i < V.rows(); i++){
+  for (int i = 0; i < V.cols(); i++){
     for (int j = 0; j < V.cols(); j++){
       V(i,j) = rand01(mt);
     }
@@ -530,18 +532,40 @@ int main(int argc, char* argv[]){
   }
 
   ofstream ofs2_1("dataU.csv");
+  // for(int i=0; i < U.rows(); i++){
+  //   for(int j=0; j < U.cols()-1; j++){
+  //     ofs2_1 << U(i,j) << ",";
+  //   }
+  //   ofs2_1 << U(i,U.cols()-1) << endl;
+  // }
   ofs2_1 << U << endl;
   ofstream ofs2_2("dataT.csv");
   ofs2_2 << T << endl;
+  // for(int i=0; i < T.rows(); i++){
+  //   for(int j=0; j < T.cols()-1; j++){
+  //     ofs2_2 << T(i,j) << ",";
+  //   }
+  //   ofs2_2 << T(i,T.cols()-1) << endl;
+  // }
   ofstream ofs2_3("dataV.csv");
+  // for(int i=0; i < V.rows(); i++){
+  //   for(int j=0; j < V.cols()-1; j++){
+  //     ofs2_3 << V(i,j) << ",";
+  //   }
+  //   ofs2_3 << V(i,V.cols()-1) << endl;
+  // }
   ofs2_3 << V << endl;
   ofstream ofs2_4("dataY1.csv");
   auto Y_e = kr_cross(V,T);
   Y_e.transposeInPlace();
   ofs2_4 << U*Y_e << endl;
   ofstream ofs4("dataM_1.csv");
+  // for(int i=0; i < M1_1.rows(); i++){
+  //   for(int j=0; j < M1_1.cols()-1; j++){
+  //     ofs4 << M1_1(i,j) << ",";
+  //   }
+  //   ofs4 << M1_1(i,M1_1.cols()-1) << endl;
+  // }
   ofs4 << M1_1 << endl;
-
-  */
   return 0;
 }
