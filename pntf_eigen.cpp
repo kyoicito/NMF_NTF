@@ -79,6 +79,7 @@ Eigen::MatrixXd mode_unfold(Eigen::Tensor<double, 3> X, int mode){
   return Xf;
 }
 
+// calculate Khatri-Rao product
 Eigen::MatrixXd kr_cross(Eigen::MatrixXd A, Eigen::MatrixXd B)
 {
   if(A.cols() != B.cols()){

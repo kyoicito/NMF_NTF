@@ -1,3 +1,7 @@
+//this code is NTF program with probability calculation using Eigen library
+//
+// the code written by @mokemoketa
+
 #include <iostream>
 #include <string>
 #include <fstream>
@@ -19,38 +23,35 @@
 
 #include "exportCsv.h"
 
+//output the matrix to the csv file
 void  exportData(std::string filename,vector<MatrixXd> data)
 {
- ofstream ofs(filename);
-
- vector<MatrixXd>::iterator it;
- for(it = data.begin(); it != data.end(); it++ )
- {
-  for (int i = 0; i < (*it).rows(); i++)
+  ofstream ofs(filename);
+  vector<MatrixXd>::iterator it;
+  for(it = data.begin(); it != data.end(); it++ )
   {
-   ofs << (*it)(i, 0);
-   if (i != (*it).rows()-1) {
-    ofs << ",";
-   }
-
+    for (int i = 0; i < (*it).rows(); i++)
+    {
+      ofs << (*it)(i, 0);
+      if (i != (*it).rows()-1) {
+      ofs << ",";
+      }
+    }
+    ofs << endl;
   }
-  ofs << endl;
- }
-
- ofs.close();
-
- return;
+  ofs.close();
+  return;
 }
 
 //rows=150,cols=4 for iris data
 
-//calculate the i-divergence
+//calculate the i-divergence between matrixes X and Y
 double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y)
 {
   //check the dimensions of both matrix
   if (X.rows() != Y.rows() || X.cols() != Y.cols() )
   {
-    std::cout << "Input matrixes are not the same dimension!" << std::endl;
+    std::cout << "Error1-1:Input matrixes are not the same dimension!" << std::endl;
     return -1.0;
   }
   double sum = 0;
@@ -61,13 +62,14 @@ double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y)
   }
   return sum;
 }
-//calculate the i-divergence with probability
+
+//calculate the i-divergence between matrixes X and Y with probability matrix M
 double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
 {
-  //check the dimensions of both matrix
+  //check the dimensions of all matrixes
   if (X.rows() != Y.rows() || X.rows() != M.rows() || X.cols() != Y.cols() || X.cols() != M.cols())
   {
-    std::cout << "Input matrixes are not the same dimension!" << std::endl;
+    std::cout << "Error1-2:Input matrixes are not the same dimension!" << std::endl;
     return -1.0;
   }
   double sum = 0;
@@ -81,7 +83,7 @@ double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
   return sum;
 }
 
-//calculate the euclid distance with probability
+//calculate the euclid distance
 double euc_err(Eigen::MatrixXd X, Eigen::MatrixXd Y)
 {
   if (X.rows() != Y.rows() || X.cols() != Y.cols() )
@@ -91,7 +93,7 @@ double euc_err(Eigen::MatrixXd X, Eigen::MatrixXd Y)
   }
   return (Y - X).squaredNorm();
 }
-//calculate the euclid distance
+//calculate the euclid distance with probability
 double euc_err(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
 {
   if (X.rows() != Y.rows() || X.cols() != Y.cols() )
@@ -99,18 +101,8 @@ double euc_err(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
     std::cout << "Input matrixes are not the same dimension!" << std::endl;
     return -1.0;
   }
-  /*
-  int sum = 0;
-  for(int i = 0; i < X.rows(); i++){
-    for(int j = 0; j < X.cols(); j++){
-      if(M(i,j) == 1){
-        sum += (Y-X)(i,j)*(Y-X)(i,j);
-      }
-    }
-  }
-  return sum;
-  */
-  return (Y-X).squaredNorm();
+
+  return (M.array()*(Y-X).array()).matrix().squaredNorm();
 }
 
 std::vector<std::string> split(const std::string &str, char sep)
@@ -124,7 +116,7 @@ std::vector<std::string> split(const std::string &str, char sep)
     return v;
 }
 
-//this function priginally by https://gist.github.com/infusion/43bd2aa421790d5b4582
+//this function originally by https://gist.github.com/infusion/43bd2aa421790d5b4582
 Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
 
   using namespace std;
@@ -167,7 +159,7 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
 //refresh the euclid distance function
 void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
   Eigen::MatrixXd Y = T * V;
-  T.array() = T.array() * (X * V.transpose()).array() / 
+  T.array() = T.array() * (X * V.transpose()).array() /
                      (T * V * V.transpose()).array();
   V.array() = V.array() * (V.transpose() * X).array() /
                      (T.transpose() * T * V).array();
@@ -280,18 +272,18 @@ int main(int argc, char* argv[]){
 
   MatrixXd X1 = readCSV(argv[1], atoi(argv[2]), atoi(argv[3])); //this sentence makes values in X1
 
-  //for randomization
+  //for randomization with mercen function
   std::random_device rnd;
   std::mt19937 mt(rnd());
   std::uniform_real_distribution<> rand01(0.0, 1.0);
 
-  MatrixXd M1 = MatrixXd(X1.rows(),X1.cols());
+  MatrixXd M1 = MatrixXd(X1.rows(), X1.cols());
   for (int i = 0; i < X1.rows(); i++){
     for (int j = 0; j < X1.cols(); j++){
       M1(i,j) = (rand01(mt)>=0.5) ? 1.0:0.0;
     }
   }
-  MatrixXd M2 = MatrixXd::Ones(M1.rows(),M1.cols()) - M1;
+  MatrixXd M2 = MatrixXd::Ones(M1.rows(), M1.cols()) - M1;
   //cout << M1 << endl;
   int k = atoi(argv[4]);
 
@@ -309,7 +301,7 @@ int main(int argc, char* argv[]){
       V1(j,i) = rand01(mt);
     }
   }
-  //for checking the change of div on each iteration
+  //save the csv files for checking the change of div on each iteration
   ofstream ofs("iter1.csv");
   ofstream ofs1("iter2.csv");
   //ofs << "0," << i_div(X1,T1*V1, M1) << endl;
@@ -345,7 +337,6 @@ int main(int argc, char* argv[]){
     }
     ofs4 << M1(i,V1.cols()-1) << endl;
   }
-
 
   return 0;
 }
