@@ -22,6 +22,8 @@
 #define MAXITER 20
 //rows=150,cols=4 for iris data
 
+#define PRESETCOL 0
+
 void  exportData(std::string filename,Eigen::Tensor<double, 3> data)
 {
  ofstream ofs(filename);
@@ -42,6 +44,7 @@ void  exportData(std::string filename,Eigen::Tensor<double, 3> data)
  return;
 }
 
+// mode unfold function
 Eigen::MatrixXd mode_unfold(Eigen::Tensor<double, 3> X, int mode){
   if(mode < 0 || mode > 3){
     cout << "Error: in mode_unfold, mode is incorrect value!" << endl;
@@ -285,6 +288,8 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   return res;
 }
 
+//read data from .csv file
+//each depth counted by everytime the number of cols
 Eigen::Tensor<double,3> readCSV(std::string file, int rows, int cols, int deps) {
 
   using namespace std;
@@ -301,30 +306,32 @@ Eigen::Tensor<double,3> readCSV(std::string file, int rows, int cols, int deps) 
   Eigen::Tensor<double, 3> res(rows, cols, deps);
 
   if (in.is_open()) {
-    std::getline(in, line);
-    while (std::getline(in, line)) {
+    //std::getline(in, line); //最初の行を飛ばす
+    while (std::getline(in, line) && row < rows) {
       col = 0;
-      vector<std::string> elems = split(line, ',');
-
-      for(int i = 0; i < elems.size(); i++){
-        pos = elems[i].find(".");
+      vector<std::string> elems = split(line, ','); //カンマで分割
+      for(int i = 0; i < elems.size(); i++){ //
+        size_t c;
         token = elems[i];
-        if(pos != string::npos){
-          token.replace(pos, 1, "");
+        while((c = token.find_first_of(" ")) != string::npos){ //全ての空白を除外
+          token.erase(c,1);
         }
-        if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えなかった
-          if(col >= 193) res(row, col-193, dep) = stof(elems[i]); //最近10年分くらいのみ
-          //res(row, col, dep) = stof(elems[i]); //atofではダメだった
-          if(dep == deps-1){
-            col++;
-            dep = 0;
-          }else{
-            dep++;
-          }
-          //cout << "elems[i] is:" << elems[i]  << ", token :" << token << endl;
+        while((c = token.find_first_of(".")) != string::npos){ //全てのドットを除外
+          token.erase(c,1);
+        }
+        if(std::all_of(token.begin(), token.end(), ::isdigit)){ //数値であるか判定(lambda式が使えなかった)
+          //if(col >= PRESETCOL) res(row, col - PRESETCOL, dep) = stof(elems[i]); //最近10年分くらいのみ
+          res(row, col, dep) = stof(elems[i]); //数値代入(atofではダメだった)
+        }
+        if(col == cols-1){ //データが右端部なら
+          dep++; //次のブロックへ
+          col = 0; //列の左端から
+        }else{
+          col++; //次の列へ
         }
       }
-      row++;
+      row++; //1行次に
+      dep = 0;
     }
     in.close();
   }
@@ -456,6 +463,7 @@ int main(int argc, char* argv[]){
                               {9.0f, 21.0f},
                               {12.0f, 24.0f}}});
   */
+
   Eigen::Tensor<double, 3> X1 = readCSV(argv[1], atoi(argv[2]), atoi(argv[3]), atoi(argv[4])); //this sentence makes values in X1
 
   //for randomization
@@ -479,10 +487,13 @@ int main(int argc, char* argv[]){
   M2 -= M1;
   //cout << M1 << endl;
   int r = atoi(argv[5]);
+  /*
   ofstream ofs2_1("dataX1.csv");
   MatrixXd A1 = mode_unfold(X1, 1);
   ofs2_1 << X1 << endl;
-  /*
+  cout << X1 << endl;
+  */
+
   //the initiation of U,T,V : X1 = UxTxV
   MatrixXd U = MatrixXd(X1.dimension(0),r);
   MatrixXd T = MatrixXd(X1.dimension(1),r);
@@ -543,6 +554,5 @@ int main(int argc, char* argv[]){
   ofstream ofs4("dataM_1.csv");
   ofs4 << M1_1 << endl;
 
-  */
   return 0;
 }
