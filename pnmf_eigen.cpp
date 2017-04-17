@@ -190,6 +190,41 @@ void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
   return;
 }
 
+/***This function have to be rewriten later***/
+void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen::MatrixXd &M){
+  Eigen::MatrixXd Y = T * V;
+  cout << "This function, \"refresh_euc(X,T,V,M)\" is still under construction!" << endl;
+  T.array() = T.array() * (X * V.transpose()).array() /
+                     (T * V * V.transpose()).array();
+  V.array() = V.array() * (V.transpose() * X).array() /
+                     (T.transpose() * T * V).array();
+  /*
+  for(int i = 0; i < X.rows(); i++){
+    for(int k = 0; k < T.cols(); k++){
+      double numer = 0;
+      double denom = 0;
+      for(int j = 0; j < X.cols(); j++){
+        numer += X(i,j) * V(k,j);
+        denom += Y(k,j) * V(i,j);
+      }
+      T(i,k) = T(i,k) * numer / denom;
+    }
+  }
+  for(int k = 0; k < V.rows(); k++){
+    for(int j = 0; j < X.cols(); j++){
+      double numer = 0;
+      double denom = 0;
+      for(int i = 0; i < X.rows(); i++){
+        numer += X(i,j) * T(i,k);
+        denom += Y(i,k) * T(i,j);
+      }
+      V(k,j) = V(k,j) * numer / denom;
+    }
+  }
+  */
+  return;
+}
+
 //refresh the i-divergence function
 void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
   Eigen::MatrixXd Y = T * V;
@@ -310,16 +345,22 @@ int main(int argc, char* argv[]){
   ofs1 << "0," << euc_err(X1,T1*V1, M2) << endl;
 
   for(int i = 1; i < MAXITER; i++){
-    //refresh_i(X1,T1,V1,M1); //refresh function for i-divergence
-    refresh_euc(X1,T1,V1,M1); //refresh function for euclid error
+    refresh_i(X1, T1, V1, M1); //refresh function for i-divergence
+    //refresh_euc(X1, T1, V1, M1); //refresh function for euclid error
 
     /*iteration check for euclid error*/
-    ofs << i << "," << euc_err(X1,T1*V1, M1) << endl;
-    ofs1 << i << "," << euc_err(X1,T1*V1, M2) << endl;
+    //ofs << i << "," << euc_err(X1, T1*V1, M1) << endl;
+    //ofs1 << i << "," << euc_err(X1, T1*V1, M2) << endl;
 
     /*iteration check for i-divergence*/
-    //ofs << i << "," << i_div(X1,T1*V1, M1) << endl;
-    //ofs1 << i << "," << i_div(X1,T1*V1, M2) << endl;
+    double now_div1 = i_div(X1,T1*V1, M1);
+    double now_div2 = i_div(X1,T1*V1, M2);
+    ofs << i << "," << now_div1 << endl;
+    ofs1 << i << "," << now_div2 << endl;
+    if(now_div1 == 0.0){
+      cout << "divergence is now 0. We will stop iteration." << endl;
+      break;
+    }
   }
 
   ofstream ofs2("dataT1.csv");

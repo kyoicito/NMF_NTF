@@ -542,8 +542,14 @@ int main(int argc, char* argv[]){
     auto Y3 = kr_cross(T,U);
     Y3.transposeInPlace();
     refresh_i(A3,V,Y3,M1_3);
-    ofs << i << "," << kl_div(X1,U,T,V, M1) << endl;
-    ofs1 << i << "," << kl_div(X1,U,T,V, M2) << endl;
+    double now_div1 = kl_div(X1, U, T, V, M1);
+    double now_div2 = kl_div(X1, U, T, V, M2);
+    ofs << i << "," << now_div1 << endl;
+    ofs1 << i << "," << now_div2 << endl;
+    if(now_div1 == 0.0){
+      cout << "divergence is now 0. We will stop iteration." << endl;
+      break;
+    }
   }
 
   ofstream ofs2_1("dataU.csv");
