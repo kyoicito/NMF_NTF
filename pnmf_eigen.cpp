@@ -1,4 +1,4 @@
-//this code is NTF program with probability calculation using Eigen library
+//this code is NMF program with probability calculation using Eigen library
 //
 // the code written by @mokemoketa
 
@@ -12,14 +12,14 @@
 #include <cctype>
 #include <algorithm>
 
-//#define EIGEN_NO_DEBUG
+#define EIGEN_NO_DEBUG //including this to speed up the program
 //#define EIGEN_DONT_PARALLELIZE
 //#define EIGEN_MPL2_ONLY
 
 #include "Eigen/Dense"
 #include <random>
 
-#define MAXITER 1000
+#define MAXITER 1000 //max iteration limit
 
 #include "exportCsv.h"
 
@@ -51,7 +51,7 @@ double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y)
   //check the dimensions of both matrix
   if (X.rows() != Y.rows() || X.cols() != Y.cols() )
   {
-    std::cout << "Error1-1:Input matrixes are not the same dimension!" << std::endl;
+    std::cout << "Error1-1:Input matrices are not the same dimension!" << std::endl;
     return -1.0;
   }
   double sum = 0;
@@ -69,7 +69,7 @@ double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
   //check the dimensions of all matrixes
   if (X.rows() != Y.rows() || X.rows() != M.rows() || X.cols() != Y.cols() || X.cols() != M.cols())
   {
-    std::cout << "Error1-2:Input matrixes are not the same dimension!" << std::endl;
+    std::cout << "Error1-2:Input matrices are not the same dimension!" << std::endl;
     return -1.0;
   }
   double sum = 0;
@@ -88,7 +88,7 @@ double euc_err(Eigen::MatrixXd X, Eigen::MatrixXd Y)
 {
   if (X.rows() != Y.rows() || X.cols() != Y.cols() )
   {
-    std::cout << "Input matrixes are not the same dimension!" << std::endl;
+    std::cout << "Error2-1:Input matrices are not the same dimension!" << std::endl;
     return -1.0;
   }
   return (Y - X).squaredNorm();
@@ -98,7 +98,7 @@ double euc_err(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
 {
   if (X.rows() != Y.rows() || X.cols() != Y.cols() )
   {
-    std::cout << "Input matrixes are not the same dimension!" << std::endl;
+    std::cout << "Error2-2:Input matrices are not the same dimension!" << std::endl;
     return -1.0;
   }
 
@@ -132,18 +132,18 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   Eigen::MatrixXd res = Eigen::MatrixXd(rows, cols);
 
   if (in.is_open()) {
-    std::getline(in, line);
+    std::getline(in, line); //skip the first line of text
     while (std::getline(in, line)) {
       col = 0;
-      vector<std::string> elems = split(line, ',');
+      vector<std::string> elems = split(line, ' '); //make a line divided by tab
 
-      for(int i = 0; i < elems.size(); i++){
+      for(int i = 1; i < elems.size(); i++){
         pos = elems[i].find(".");
         token = elems[i];
         if(pos != string::npos){
           token.replace(pos, 1, "");
         }
-        if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えなかった
+        if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えず
           res(row, col) = stof(elems[i]); //atofではダメだった
           col++;
           //cout << "elems[i] is:" << elems[i]  << ", token :" << token << endl;
@@ -310,9 +310,15 @@ int main(int argc, char* argv[]){
   ofs1 << "0," << euc_err(X1,T1*V1, M2) << endl;
 
   for(int i = 1; i < MAXITER; i++){
-    //refresh_i(X1,T1,V1,M1);
-    refresh_euc(X1,T1,V1);
-    ofs << i << "," << i_div(X1,T1*V1, M1) << endl;
+    //refresh_i(X1,T1,V1,M1); //refresh function for i-divergence
+    refresh_euc(X1,T1,V1,M1); //refresh function for euclid error
+
+    /*iteration check for euclid error*/
+    ofs << i << "," << euc_err(X1,T1*V1, M1) << endl;
+    ofs1 << i << "," << euc_err(X1,T1*V1, M2) << endl;
+
+    /*iteration check for i-divergence*/
+    //ofs << i << "," << i_div(X1,T1*V1, M1) << endl;
     //ofs1 << i << "," << i_div(X1,T1*V1, M2) << endl;
   }
 

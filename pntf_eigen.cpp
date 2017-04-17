@@ -8,7 +8,7 @@
 #include <cctype>
 #include <algorithm>
 
-//#define EIGEN_NO_DEBUG
+#define EIGEN_NO_DEBUG //to speed up the program
 //#define EIGEN_DONT_PARALLELIZE
 //#define EIGEN_MPL2_ONLY
 
@@ -24,6 +24,7 @@
 
 #define PRESETCOL 0
 
+//export data into csv file
 void  exportData(std::string filename,Eigen::Tensor<double, 3> data)
 {
  ofstream ofs(filename);
@@ -47,7 +48,7 @@ void  exportData(std::string filename,Eigen::Tensor<double, 3> data)
 // mode unfold function
 Eigen::MatrixXd mode_unfold(Eigen::Tensor<double, 3> X, int mode){
   if(mode < 0 || mode > 3){
-    cout << "Error: in mode_unfold, mode is incorrect value!" << endl;
+    cout << "Error: in mode_unfold, mode has incorrect value: "<< mode << "!" << endl;
   }
   int dim = 1;
   int is[2];
@@ -123,6 +124,7 @@ double kl_div(Eigen::Tensor<double, 3> X, Eigen::Tensor<double, 3> Y)
   }
   return sum;
 }
+
 //calculate the kl-divergence with probability
 double kl_div(Eigen::Tensor<double, 3> X, Eigen::MatrixXd U, Eigen::MatrixXd T, Eigen::MatrixXd V, Eigen::Tensor<double, 3> M)
 {
@@ -170,6 +172,7 @@ double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y)
   }
   return sum;
 }
+
 //calculate the i-divergence with probability
 double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
 {
@@ -190,7 +193,7 @@ double i_div(Eigen::MatrixXd X, Eigen::MatrixXd Y, Eigen::MatrixXd M)
   return sum;
 }
 
-//calculate the euclid distance with probability
+//calculate the euclid distance
 double euc_err(Eigen::Tensor<double,3> X, Eigen::Tensor<double,3> Y)
 {
   double sum = 0;
@@ -203,7 +206,8 @@ double euc_err(Eigen::Tensor<double,3> X, Eigen::Tensor<double,3> Y)
   }
   return sum;
 }
-//calculate the euclid distance
+
+//calculate the euclid distance with probability
 double euc_err(Eigen::Tensor<double,3> X, Eigen::Tensor<double,3> Y, Eigen::Tensor<double,3> M)
 {
   double sum = 0;
@@ -219,6 +223,7 @@ double euc_err(Eigen::Tensor<double,3> X, Eigen::Tensor<double,3> Y, Eigen::Tens
   return sum;
 }
 
+//split function for string
 std::vector<std::string> split(const std::string &str, char sep)
 {
     std::vector<std::string> v;
@@ -230,6 +235,7 @@ std::vector<std::string> split(const std::string &str, char sep)
     return v;
 }
 
+//
 Eigen::MatrixXd krc_vec(Eigen::MatrixXd A, Eigen::MatrixXd B) {
 
   const int asize = A.rows();
@@ -267,7 +273,7 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
     std::getline(in, line);
     while (std::getline(in, line)) {
       col = 0;
-      vector<std::string> elems = split(line, ',');
+      vector<std::string> elems = split(line, '\t');
 
       for(int i = 0; i < elems.size(); i++){
         pos = elems[i].find(".");
@@ -365,7 +371,6 @@ void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
     }
   }
   return;
-}
 
 //refresh the i-divergence function
 void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
@@ -411,7 +416,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
         }
       }
       if (denom != 0.0) {
-        T(i,k) = T(i,k) * numer / (denom + pow(10,-10));
+        T(i,k) = T(i,k) * numer / (denom + pow(10,-10)); //plus pow(10,-10) to avoid numer divided by 0
       }else{
         T(i,k) = 0.0;
       }
@@ -429,7 +434,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
         }
       }
       if (denom != 0.0) {
-        V(k,j) = V(k,j) * numer / (denom + pow(10,-10));
+        V(k,j) = V(k,j) * numer / (denom + pow(10,-10)); //plus pow(10,-10) to avoid numer divided by 0
       }else{
         V(k,j) = 0.0;
       }
@@ -448,6 +453,7 @@ int main(int argc, char* argv[]){
     return -1;
   }
 
+  /* Test Data */
   /*
   Tensor<double, 3> X1(3, 4, 2);
                 X1.setValues({{{1.0f,13.0f},
@@ -480,7 +486,6 @@ int main(int argc, char* argv[]){
       }
     }
   }
-
 
   Tensor<double, 3> M2(X1.dimension(0),X1.dimension(1),X1.dimension(2));
   M2.setConstant(1.0f);
