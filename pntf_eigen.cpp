@@ -270,7 +270,7 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   Eigen::MatrixXd res = Eigen::MatrixXd(rows, cols);
 
   if (in.is_open()) {
-    std::getline(in, line);
+    std::getline(in, line); // skip the first line
     while (std::getline(in, line)) {
       col = 0;
       vector<std::string> elems = split(line, '\t');
