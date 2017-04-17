@@ -371,6 +371,7 @@ void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
     }
   }
   return;
+}
 
 //refresh the i-divergence function
 void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
@@ -446,7 +447,6 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
 int main(int argc, char* argv[]){
   using namespace Eigen;
   using namespace std;
-
 
   if(argc != 6){
     std::cout << "Usage:" << argv[0] << " [inputfile] [rows] [columns] [depths] [dimensions]" << std::endl;
