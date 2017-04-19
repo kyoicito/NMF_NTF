@@ -332,8 +332,8 @@ int main(int argc, char* argv[]){
   ofstream ofs("iter.csv");
   //ofs << "0," << i_div(X1,T1*V1, M1) << endl;
   //ofs1 << "0," << i_div(X1,T1*V1, M2) << endl;
-  ofs << "0," << i_div(X1,T1*V1, M1) << endl;
-  ofs1 << "0," << i_div(X1,T1*V1, M2) << endl;
+  ofs << "0," << i_div(X1,T1*V1) << endl;
+  ofs1 << "0," << i_div(X1,T1*V1) << endl;
 
   for(int i = 1; i <= MAXITER; i++){
     refresh_i(X1, T1, V1); //refresh function for i-divergence
