@@ -235,12 +235,12 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
       double denom = 0;
       for(int j = 0; j < X.cols(); j++){
         if(Y(i,j) != 0.0){
-          numer += X(i,j) / Y(i,j) * V(k,j);
+          numer += X(i,j) / (Y(i,j) + pow(10,-10)) * V(k,j);
           denom += V(k,j);
         }
       }
       if (denom != 0.0) {
-        T(i,k) = T(i,k) * numer / denom;
+        T(i,k) = T(i,k) * numer / (denom + pow(10,-10));
       }else{
         T(i,k) = 0.0;
       }
@@ -253,11 +253,11 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
       double denom = 0;
       for(int i = 0; i < X.rows(); i++){
         if(Y(i,j) != 0.0){
-          numer += X(i,j) / Y(i,j) * T(i,k);
+          numer += X(i,j) / (Y(i,j) + pow(10,-10)) * T(i,k);
           denom += T(i,k);
         }
       }
-      V(k,j) = V(k,j) * numer / denom;
+      V(k,j) = V(k,j) * numer / (denom + pow(10,-10));
     }
   }
   return;
