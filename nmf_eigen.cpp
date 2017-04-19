@@ -234,7 +234,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
       double numer = 0;
       double denom = 0;
       for(int j = 0; j < X.cols(); j++){
-        if(Y(i,j) != 0.0 && T(i,k) != 0.0){
+        if(Y(i,j) != 0.0){
           numer += X(i,j) / Y(i,j) * V(k,j);
           denom += V(k,j);
         }
@@ -251,15 +251,13 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
     for(int j = 0; j < X.cols(); j++){
       double numer = 0;
       double denom = 0;
-      if(Y(i,j) != 0.0 && T(i,k) != 0.0){
-        numer += X(i,j) / Y(i,j) * T(i,k);
-        denom += T(i,k);
+      for(int i = 0; i < X.rows(); i++){
+        if(Y(i,j) != 0.0){
+          numer += X(i,j) / Y(i,j) * T(i,k);
+          denom += T(i,k);
+        }
       }
-      if (denom != 0.0) {
-        V(k,j) = V(k,j) * numer / denom;
-      }else{
-        V(k,j) = 0.0;
-      }
+      V(k,j) = V(k,j) * numer / denom;
     }
   }
   return;
@@ -273,7 +271,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
       double numer = 0;
       double denom = 0;
       for(int j = 0; j < X.cols(); j++){
-        if(Y(i,j) != 0.0 && T(i,k) != 0.0){
+        if(Y(i,j) != 0.0){
           numer += M(i,j)*X(i,j) / Y(i,j) * V(k,j);
           denom += M(i,j)*V(k,j);
         }
@@ -291,7 +289,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen
       double numer = 0;
       double denom = 0;
       for(int i = 0; i < X.rows(); i++){
-        if(Y(i,j) != 0.0 && T(i,k) != 0.0){
+        if(Y(i,j) != 0.0){
           numer += M(i,j)*X(i,j) / Y(i,j) * T(i,k);
           denom += M(i,j)*T(i,k);
         }
