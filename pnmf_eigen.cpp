@@ -19,7 +19,7 @@
 #include "Eigen/Dense"
 #include <random>
 
-#define MAXITER 1000 //max iteration limit
+#define MAXITER 20 //max iteration limit
 
 #include "exportCsv.h"
 
@@ -344,7 +344,7 @@ int main(int argc, char* argv[]){
   ofs << "0," << euc_err(X1,T1*V1, M1) << endl;
   ofs1 << "0," << euc_err(X1,T1*V1, M2) << endl;
 
-  for(int i = 1; i < MAXITER; i++){
+  for(int i = 1; i <= MAXITER; i++){
     refresh_i(X1, T1, V1, M1); //refresh function for i-divergence
     //refresh_euc(X1, T1, V1, M1); //refresh function for euclid error
 
