@@ -132,12 +132,12 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   Eigen::MatrixXd res = Eigen::MatrixXd(cols, rows);
 
   if (in.is_open()) {
-    std::getline(in, line); //skip the first line of text
+    //std::getline(in, line); //skip the first line of text
     col = 0;
     while (std::getline(in, line)) {
-      vector<std::string> elems = split(line, ' '); //make a line divided by tab
+      vector<std::string> elems = split(line, '\t'); //make a line divided by tab
       row = 0;
-      for(int i = 1; i < elems.size() && i < rows; i++){
+      for(int i = 0; i < elems.size() && i < rows; i++){
         pos = elems[i].find(".");
         token = elems[i];
         if(pos != string::npos){
@@ -145,7 +145,7 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
         }
         if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えず
           res(row, col) = stof(elems[i]); //atofではダメだった
-          cout << "elems[i] is:" << elems[i] << ", (col,row): " << col << "," << row << endl;
+          //cout << "elems[i] is:" << elems[i] << ", (col,row): " << col << "," << row << endl;
         }
         row++;
       }
@@ -314,7 +314,6 @@ int main(int argc, char* argv[]){
   }
 
   MatrixXd X1 = readCSV(argv[1], atoi(argv[3]), atoi(argv[2])); //this sentence makes values in X1
-  cout << "X1:" << endl << X1 << endl;
   //for randomization with mercen function
   std::random_device rnd;
   std::mt19937 mt(rnd());
