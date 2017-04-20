@@ -135,7 +135,7 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
     std::getline(in, line); //skip the first line of text
     col = 0;
     while (std::getline(in, line)) {
-      vector<std::string> elems = split(line, ','); //make a line divided by tab
+      vector<std::string> elems = split(line, ' '); //make a line divided by tab
       row = 0;
       for(int i = 1; i < elems.size() && i < rows; i++){
         pos = elems[i].find(".");
@@ -336,8 +336,6 @@ int main(int argc, char* argv[]){
       V1(j,i) = rand01(mt);
     }
   }
-  ofstream inputf("inputfile.txt");
-  inputf << X1 << endl;
   //save the csv files for checking the change of div on each iteration
   ofstream ofs("iter.csv");
   //ofs << "0," << i_div(X1,T1*V1, M1) << endl;
