@@ -19,12 +19,12 @@
 #include "Eigen/Dense"
 #include <random>
 
-#define MAXITER 20 //max iteration limit
+#define MAXITER 1000 //max iteration limit
 
 #include "exportCsv.h"
 
 //output the matrix to the csv file
-void  exportData(std::string filename,vector<MatrixXd> data)
+void exportData(std::string filename,vector<MatrixXd> data)
 {
   ofstream ofs(filename);
   vector<MatrixXd>::iterator it;
@@ -129,15 +129,15 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   int row = 0;
   int col = 0;
 
-  Eigen::MatrixXd res = Eigen::MatrixXd(rows, cols);
+  Eigen::MatrixXd res = Eigen::MatrixXd(cols, rows);
 
   if (in.is_open()) {
     std::getline(in, line); //skip the first line of text
+    col = 0;
     while (std::getline(in, line)) {
-      col = 0;
-      vector<std::string> elems = split(line, ' '); //make a line divided by tab
-
-      for(int i = 1; i < elems.size(); i++){
+      vector<std::string> elems = split(line, ','); //make a line divided by tab
+      row = 0;
+      for(int i = 1; i < elems.size() && i < rows; i++){
         pos = elems[i].find(".");
         token = elems[i];
         if(pos != string::npos){
@@ -145,11 +145,11 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
         }
         if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えず
           res(row, col) = stof(elems[i]); //atofではダメだった
-          col++;
-          //cout << "elems[i] is:" << elems[i]  << ", token :" << token << endl;
+          cout << "elems[i] is:" << elems[i] << ", (col,row): " << col << "," << row << endl;
         }
+        row++;
       }
-      row++;
+      col++;
     }
     in.close();
   }
@@ -246,7 +246,7 @@ void refresh_i(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
       }
     }
   }
-  Y = T * V;
+  Y = T * V; //update Y with new T
   for(int k = 0; k < V.rows(); k++){
     for(int j = 0; j < X.cols(); j++){
       double numer = 0;
@@ -309,16 +309,16 @@ int main(int argc, char* argv[]){
   using namespace std;
 
   if(argc != 5){
-    std::cout << "Usage:" << argv[0] << " [inputfile] [rows] [columns] [dimensions]" << std::endl;
+    cout << "Usage:" << argv[0] << " [inputfile] [rows] [columns] [rank]" << endl;
     return -1;
   }
 
-  MatrixXd X1 = readCSV(argv[1], atoi(argv[2]), atoi(argv[3])); //this sentence makes values in X1
-
+  MatrixXd X1 = readCSV(argv[1], atoi(argv[3]), atoi(argv[2])); //this sentence makes values in X1
+  cout << "X1:" << endl << X1 << endl;
   //for randomization with mercen function
   std::random_device rnd;
   std::mt19937 mt(rnd());
-  std::uniform_real_distribution<> rand01(0.0, 1.0);
+  std::uniform_real_distribution<> rand01(0.5, 1.0);
 
   int k = atoi(argv[4]);
 
@@ -336,6 +336,8 @@ int main(int argc, char* argv[]){
       V1(j,i) = rand01(mt);
     }
   }
+  ofstream inputf("inputfile.txt");
+  inputf << X1 << endl;
   //save the csv files for checking the change of div on each iteration
   ofstream ofs("iter.csv");
   //ofs << "0," << i_div(X1,T1*V1, M1) << endl;
@@ -373,6 +375,7 @@ int main(int argc, char* argv[]){
     }
     ofs3 << V1(i,V1.cols()-1) << endl;
   }
+
 
   return 0;
 }
