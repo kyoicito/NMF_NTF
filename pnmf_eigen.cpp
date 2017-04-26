@@ -1,5 +1,4 @@
-//this code is NMF program with probability calculation using Eigen library
-//
+//NMF program with probability calculation using Eigen library
 // the code written by @mokemoketa
 
 #include <iostream>
@@ -18,6 +17,13 @@
 
 #include "Eigen/Dense"
 #include <random>
+
+//execute with option "CS" for set separator ','
+#ifdef CS
+  #define SEPARATOR ','
+#else
+  #define SEPARATOR '\t'
+#endif
 
 #define MAXITER 20 //max iteration limit
 
@@ -134,10 +140,10 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   if (in.is_open()) {
     std::getline(in, line); //skip the first line of text
     while (std::getline(in, line)) {
-      col = 0;
-      vector<std::string> elems = split(line, ' '); //make a line divided by tab
+      row = 0;
+      vector<std::string> elems = split(line, SEPARATOR); //make a line divided by tab
 
-      for(int i = 1; i < elems.size(); i++){
+      for(int i = 1; i < elems.size() && col < cols; i++){
         pos = elems[i].find(".");
         token = elems[i];
         if(pos != string::npos){
@@ -306,7 +312,8 @@ int main(int argc, char* argv[]){
   }
 
   MatrixXd X1 = readCSV(argv[1], atoi(argv[2]), atoi(argv[3])); //this sentence makes values in X1
-
+  cout << "number of X element values more than 10:" << (X1.array()>10.0).count() << endl;
+  cout << "total num:" << X1.sum() << endl;
   //for randomization with mercen function
   std::random_device rnd;
   std::mt19937 mt(rnd());
@@ -315,11 +322,11 @@ int main(int argc, char* argv[]){
   MatrixXd M1 = MatrixXd(X1.rows(), X1.cols());
   for (int i = 0; i < X1.rows(); i++){
     for (int j = 0; j < X1.cols(); j++){
-      M1(i,j) = (rand01(mt)>=0.5) ? 1.0:0.0;
+      //M1(i,j) = (rand01(mt)>=0.1) ? 1.0:0.0;
+      M1(i,j) = (X1(i,j) > 0.0) ? 1.0:0.0;
     }
   }
   MatrixXd M2 = MatrixXd::Ones(M1.rows(), M1.cols()) - M1;
-  //cout << M1 << endl;
   int k = atoi(argv[4]);
 
   //the initiation of T,V
@@ -341,8 +348,8 @@ int main(int argc, char* argv[]){
   ofstream ofs1("iter2.csv");
   //ofs << "0," << i_div(X1,T1*V1, M1) << endl;
   //ofs1 << "0," << i_div(X1,T1*V1, M2) << endl;
-  ofs << "0," << euc_err(X1,T1*V1, M1) << endl;
-  ofs1 << "0," << euc_err(X1,T1*V1, M2) << endl;
+  ofs << "0," << i_div(X1,T1*V1, M1) << endl;
+  ofs1 << "0," << i_div(X1,T1*V1, M2) << endl;
 
   for(int i = 1; i <= MAXITER; i++){
     refresh_i(X1, T1, V1, M1); //refresh function for i-divergence
@@ -364,26 +371,29 @@ int main(int argc, char* argv[]){
   }
 
   ofstream ofs2("dataT1.csv");
-  for(int i=0; i < T1.rows(); i++){
+  /*for(int i=0; i < T1.rows(); i++){
     for(int j=0; j < T1.cols()-1; j++){
       ofs2 << T1(i,j) << ",";
     }
     ofs2 << T1(i,T1.cols()-1) << endl;
-  }
+  }*/
+  ofs2 << T1 << endl;
   ofstream ofs3("dataV1.csv");
-  for(int i=0; i < V1.rows(); i++){
+  /*for(int i=0; i < V1.rows(); i++){
     for(int j=0; j < V1.cols()-1; j++){
       ofs3 << V1(i,j) << ",";
     }
     ofs3 << V1(i,V1.cols()-1) << endl;
-  }
+  }*/
+  ofs2 << V1 << endl;
   ofstream ofs4("dataM.csv");
-  for(int i=0; i < M1.rows(); i++){
+  /*for(int i=0; i < M1.rows(); i++){
     for(int j=0; j < M1.cols()-1; j++){
       ofs4 << M1(i,j) << ",";
     }
     ofs4 << M1(i,V1.cols()-1) << endl;
-  }
+  }*/
+  ofs4 << M1 << endl;
 
   return 0;
 }

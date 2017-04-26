@@ -17,9 +17,16 @@
 #include <random>
 #include "exportCsv.h"
 
+//execute with option "CS" for set separator ','
+#ifdef CS
+  #define SEPARATOR ','
+#else
+  #define SEPARATOR '\t'
+#endif
+
 #define CONST1 0
 
-#define MAXITER 20
+#define MAXITER 10
 //rows=150,cols=4 for iris data
 
 #define PRESETCOL 0
@@ -273,9 +280,9 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
     std::getline(in, line); // skip the first line
     while (std::getline(in, line)) {
       col = 0;
-      vector<std::string> elems = split(line, '\t');
+      vector<std::string> elems = split(line, SEPARATOR);
 
-      for(int i = 0; i < elems.size(); i++){
+      for(int i = 1; i < elems.size() && i <= rows; i++){
         pos = elems[i].find(".");
         token = elems[i];
         if(pos != string::npos){
@@ -312,10 +319,10 @@ Eigen::Tensor<double,3> readCSV(std::string file, int rows, int cols, int deps) 
   Eigen::Tensor<double, 3> res(rows, cols, deps);
 
   if (in.is_open()) {
-    //std::getline(in, line); //最初の行を飛ばす
+    std::getline(in, line); //最初の行を飛ばす
     while (std::getline(in, line) && row < rows) {
       col = 0;
-      vector<std::string> elems = split(line, ','); //カンマで分割
+      vector<std::string> elems = split(line, SEPARATOR); //カンマで分割
       for(int i = 0; i < elems.size(); i++){ //
         size_t c;
         token = elems[i];
@@ -564,6 +571,8 @@ int main(int argc, char* argv[]){
   ofs2_4 << U*Y_e << endl;
   ofstream ofs4("dataM_1.csv");
   ofs4 << M1_1 << endl;
+  ofstream ofs5("dataM_2.csv");
+  ofs5 << mode_unfold(M2, 1) << endl;
 
   return 0;
 }

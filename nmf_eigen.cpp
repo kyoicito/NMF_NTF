@@ -19,7 +19,7 @@
 #include "Eigen/Dense"
 #include <random>
 
-#define MAXITER 1000 //max iteration limit
+#define MAXITER 20 //max iteration limit
 
 #include "exportCsv.h"
 
@@ -129,15 +129,15 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
   int row = 0;
   int col = 0;
 
-  Eigen::MatrixXd res = Eigen::MatrixXd(cols, rows);
+  Eigen::MatrixXd res = Eigen::MatrixXd(rows, cols);
 
   if (in.is_open()) {
-    //std::getline(in, line); //skip the first line of text
-    col = 0;
-    while (std::getline(in, line)) {
+    std::getline(in, line); //skip the first line of text
+    row = 0;
+    while (getline(in, line)) {
       vector<std::string> elems = split(line, '\t'); //make a line divided by tab
-      row = 0;
-      for(int i = 0; i < elems.size() && i < rows; i++){
+      col = 0;
+      for(int i = 1; i < elems.size() && col <= cols; i++){
         pos = elems[i].find(".");
         token = elems[i];
         if(pos != string::npos){
@@ -145,11 +145,11 @@ Eigen::MatrixXd readCSV(std::string file, int rows, int cols) {
         }
         if(std::all_of(token.begin(), token.end(), ::isdigit)){ //lambda式が使えず
           res(row, col) = stof(elems[i]); //atofではダメだった
+          col++;
           //cout << "elems[i] is:" << elems[i] << ", (col,row): " << col << "," << row << endl;
         }
-        row++;
       }
-      col++;
+      row++;
     }
     in.close();
   }
@@ -194,10 +194,10 @@ void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V){
 void refresh_euc(Eigen::MatrixXd &X, Eigen::MatrixXd &T, Eigen::MatrixXd &V, Eigen::MatrixXd &M){
   Eigen::MatrixXd Y = T * V;
   cout << "This function, \"refresh_euc(X,T,V,M)\" is still under construction!" << endl;
-  T.array() = T.array() * (X * V.transpose()).array() /
-                     (T * V * V.transpose()).array();
-  V.array() = V.array() * (V.transpose() * X).array() /
-                     (T.transpose() * T * V).array();
+  T.array() = T.array() * (X * V.transpose()).array() *
+                     (T * V * V.transpose()).array().inverse();
+  V.array() = V.array() * (V.transpose() * X).array() *
+                     (T.transpose() * T * V).array().inverse();
   /*
   for(int i = 0; i < X.rows(); i++){
     for(int k = 0; k < T.cols(); k++){
@@ -313,7 +313,7 @@ int main(int argc, char* argv[]){
     return -1;
   }
 
-  MatrixXd X1 = readCSV(argv[1], atoi(argv[3]), atoi(argv[2])); //this sentence makes values in X1
+  MatrixXd X1 = readCSV(argv[1], atoi(argv[2]), atoi(argv[3])); //this sentence makes values in X1
   //for randomization with mercen function
   std::random_device rnd;
   std::mt19937 mt(rnd());
@@ -340,7 +340,6 @@ int main(int argc, char* argv[]){
   //ofs << "0," << i_div(X1,T1*V1, M1) << endl;
   //ofs1 << "0," << i_div(X1,T1*V1, M2) << endl;
   ofs << "0," << i_div(X1,T1*V1) << endl;
-
   for(int i = 1; i <= MAXITER; i++){
     refresh_i(X1, T1, V1); //refresh function for i-divergence
     //refresh_euc(X1, T1, V1, M1); //refresh function for euclid error
